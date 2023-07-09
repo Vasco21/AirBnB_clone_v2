@@ -26,12 +26,12 @@ def all(self, cls=None):
     if cls is not None:
         if type(cls) == str:
             cls = eval(cls)
-        cls_dict = {}
-        for k, v in self.__objects.items():
-            if type(v) == cls:
-                cls_dict[k] = v
-        return cls_dict
-    return self.__objects
+            cls_dict = {}
+            for k, v in self.__objects.items():
+                if type(v) == cls:
+                    cls_dict[k] = v
+            return cls_dict
+        return self.__objects
 
 def new(self, obj):
     """Set in __objects obj with key <obj_class_name>.id."""
@@ -61,7 +61,7 @@ def delete(self, obj=None):
         del self.__objects["{}.{}".format(type(obj).__name__, obj.id)]
     except (AttributeError, KeyError):
         pass
-
+    
 def close(self):
     """Call the reload method."""
     self.reload()
