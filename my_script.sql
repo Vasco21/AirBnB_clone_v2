@@ -1,42 +1,30 @@
-import unittest
-import MySQLdb
-from console import HBNBCommand
+#!/usr/bin/python3
 
-class TestCreateCommand(unittest.TestCase):
-    def setUp(self):
-        # Connect to the MySQL database
-        self.db = MySQLdb.connect(host='localhost',
-                                  user='hbnb_test',
-                                  passwd='hbnb_test_pwd',
-                                  db='hbnb_test_db')
+import mysql.connector
 
-        # Create a cursor object
-        self.cursor = self.db.cursor()
+# MySQL connection parameters
+user = 'your_username'
+password = 'your_password'
+host = 'localhost'
+database = 'hbnb_dev_db'
 
-        # Create the HBNBCommand instance
-        self.console = HBNBCommand()
+# Connect to MySQL server
+connection = mysql.connector.connect(
+    user=user,
+    password=password,
+    host=host,
+)
 
-        # Disable stdout during the tests
-        self.console.disable_stdout()
+# Create database if it doesn't exist
+cursor = connection.cursor()
+cursor.execute("CREATE DATABASE IF NOT EXISTS {}".format(database))
+cursor.close()
 
-    def tearDown(self):
-        # Close the database connection
-        self.db.close()
+# Grant privileges to the user
+cursor = connection.cursor()
+cursor.execute("GRANT ALL PRIVILEGES ON {}.* TO '{}'@'{}'".format(database, user, host))
+cursor.execute("GRANT SELECT ON performance_schema.* TO '{}'@'{}'".format(user, host))
+cursor.close()
 
-    def test_create_state(self):
-        # Get the initial number of records in the states table
-        self.cursor.execute('SELECT COUNT(*) FROM states')
-        initial_count = self.cursor.fetchone()[0]
-
-        # Execute the create command
-        self.console.onecmd('create State name="California"')
-
-        # Get the final number of records in the states table
-        self.cursor.execute('SELECT COUNT(*) FROM states')
-        final_count = self.cursor.fetchone()[0]
-
-        # Check if the difference is +1
-        self.assertEqual(final_count - initial_count, 1)
-
-if __name__ == '__main__':
-    unittest.main()
+# Close the connection
+connection.close()

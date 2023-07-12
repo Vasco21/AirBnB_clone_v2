@@ -1,12 +1,8 @@
 #!/usr/bin/python3
 
-from sqlalchemy import Column, String, Integer, Float, ForeignKey, Table
-from sqlalchemy.orm import relationship
 from models.base_model import BaseModel, Base
-
-place_amenity = Table('place_amenity', Base.metadata,
-                      Column('place_id', String(60), ForeignKey('places.id'), nullable=False),
-                      Column('amenity_id', String(60), ForeignKey('amenities.id'), nullable=False))
+from sqlalchemy import Column, String, Float, Integer, ForeignKey
+from sqlalchemy.orm import relationship
 
 class Place(BaseModel, Base):
     __tablename__ = 'places'
@@ -20,5 +16,9 @@ class Place(BaseModel, Base):
     price_by_night = Column(Integer, default=0, nullable=False)
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
+    user = relationship("User", backref="places")
     reviews = relationship("Review", backref="place", cascade="all, delete")
-    amenities = relationship("Amenity", secondary=place_amenity, viewonly=False)
+    amenities = relationship("Amenity", secondary="place_amenity", viewonly=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

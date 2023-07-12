@@ -1,53 +1,22 @@
 #!/usr/bin/python3
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
-from models.base_model import Base
+-- Create the development database
+CREATE DATABASE IF NOT EXISTS hbnb_dev_db;
 
-class DBStorage:
-    __engine = None
-    __session = None
+-- Create the development user
+CREATE USER IF NOT EXISTS 'hbnb_dev'@'localhost' IDENTIFIED BY 'hbnb_dev_pwd';
 
-    def __init__(self):
-        user = os.getenv("HBNB_MYSQL_USER")
-        password = os.getenv("HBNB_MYSQL_PWD")
-        host = os.getenv("HBNB_MYSQL_HOST")
-        db = os.getenv("HBNB_MYSQL_DB")
-        self.__engine = create_engine('mysql+mysqldb://{}:{}@{}/{}'
-                                      .format(user, password, host, db),
-                                      pool_pre_ping=True)
-        if os.getenv("HBNB_ENV") == "test":
-            Base.metadata.drop_all(bind=self.__engine)
+-- Grant privileges to the development user
+GRANT ALL PRIVILEGES ON hbnb_dev_db.* TO 'hbnb_dev'@'localhost';
 
-    def all(self, cls=None):
-        objects = {}
-        if cls:
-            result = self.__session.query(cls).all()
-            for obj in result:
-                key = "{}.{}".format(type(obj).__name__, obj.id)
-                objects[key] = obj
-        else:
-            classes = [User, State, City, Amenity, Place, Review]
-            for cls in classes:
-                result = self.__session.query(cls).all()
-                for obj in result:
-                    key = "{}.{}".format(type(obj).__name__, obj.id)
-                    objects[key] = obj
-        return objects
+-- Create the testing database
+CREATE DATABASE IF NOT EXISTS hbnb_test_db;
 
-    def new(self, obj):
-        self.__session.add(obj)
+-- Create the testing user
+CREATE USER IF NOT EXISTS 'hbnb_test'@'localhost' IDENTIFIED BY 'hbnb_test_pwd';
 
-    def save(self):
-        self.__session.commit()
+-- Grant privileges to the testing user
+GRANT ALL PRIVILEGES ON hbnb_test_db.* TO 'hbnb_test'@'localhost';
 
-    def delete(self, obj=None):
-        if obj:
-            self.__session.delete(obj)
-
-    def reload(self):
-        Base.metadata.create_all(self.__engine)
-        session_factory = sessionmaker(bind=self.__engine,
-                                       expire_on_commit=False)
-        self.__session = scoped_session(session_factory)
-
+-- Grant SELECT privilege on performance_schema to the testing user
+GRANT SELECT ON performance_schema.* TO 'hbnb_test'@'localhost';

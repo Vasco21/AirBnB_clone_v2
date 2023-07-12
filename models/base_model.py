@@ -1,40 +1,41 @@
 #!/usr/bin/python3
 
-
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String, DateTime
+from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
-from models import storage
 
 Base = declarative_base()
 
 class BaseModel:
     id = Column(String(60), primary_key=True, nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow())
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow())
+    created_at = Column(DateTime, default=datetime.utcnow(), nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow(), nullable=False)
 
     def __init__(self, *args, **kwargs):
-        self.id = str(uuid.uuid4())
-        self.created_at = datetime.now()
-        self.updated_at = datetime.now()
         if kwargs:
             for key, value in kwargs.items():
                 if key != '__class__':
                     setattr(self, key, value)
+        if 'id' not in kwargs:
+            self.id = str(uuid.uuid4())
+        now = datetime.utcnow()
+        if 'created_at' not in kwargs:
+            self.created_at = now
+        if 'updated_at' not in kwargs:
+            self.updated_at = now
 
     def save(self):
-        self.updated_at = datetime.now()
-        storage.new(self)
-        storage.save()
+        self.updated_at = datetime.utcnow()
+        models.storage.new(self)
+        models.storage.save()
 
     def delete(self):
-        storage.delete(self)
+        models.storage.delete(self)
 
     def to_dict(self):
-        dict_copy = self.__dict__.copy()
-        if '_sa_instance_state' in dict_copy:
-            del dict_copy['_sa_instance_state']
-        dict_copy['created_at'] = self.created_at.isoformat()
-        dict_copy['updated_at'] = self.updated_at.isoformat()
-        dict_copy['__class__'] = type(self).__name__
-        return dict_copy
+        data = self.__dict__.copy()
+        data.pop('_sa_instance_state', None)
+        data['created_at'] = data['created_at'].isoformat()
+        data['updated_at'] = data['updated_at'].isoformat()
+        data['__class__'] = self.__class__.__name__
+        return data
